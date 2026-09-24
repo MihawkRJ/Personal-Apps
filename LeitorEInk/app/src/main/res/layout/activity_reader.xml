@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Leitor E-Ink · Copyright (c) 2026 Widney Silva · Licença MIT -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/eink_page_background">
+
+    <!-- Barra superior mínima: voltar, título, tamanho da fonte (só para EPUB/TXT) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="4dp"
+        android:paddingVertical="4dp"
+        android:background="@color/eink_page_background">
+
+        <ImageView
+            android:id="@+id/buttonBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="@string/content_description_back" />
+
+        <TextView
+            android:id="@+id/textReaderTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/eink_text_primary"
+            android:textSize="14sp"
+            tools:text="A Sutil Arte de Ligar o Foda-se" />
+
+        <TextView
+            android:id="@+id/buttonToggleMode"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:minWidth="52dp"
+            android:gravity="center"
+            android:paddingHorizontal="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:text="@string/mode_text"
+            android:textColor="@color/eink_text_primary"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/buttonFontDecrease"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:text="@string/font_decrease"
+            android:textColor="@color/eink_text_primary"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/buttonFontIncrease"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:text="@string/font_increase"
+            android:textColor="@color/eink_text_primary"
+            android:textSize="18sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/eink_divider" />
+
+    <!-- Área de conteúdo: só uma das views abaixo fica visível, de acordo com o formato.
+         É um SwipeContainer para permitir virar a página arrastando o dedo, como um livro. -->
+    <com.widney.leitoreink.ui.SwipeContainer
+        android:id="@+id/contentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- ScrollView (vertical) + HorizontalScrollView (horizontal) em volta da imagem
+             do PDF: com zoom em 100% o conteúdo cabe exatamente na tela (nada a rolar);
+             ao aumentar o "texto" (zoom), a imagem fica maior que a tela e dá para
+             arrastar nas duas direções para ler cada trecho da página. -->
+        <ScrollView
+            android:id="@+id/scrollPdfVertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:scrollbars="none"
+            android:fillViewport="true">
+
+            <HorizontalScrollView
+                android:id="@+id/scrollPdfHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <ImageView
+                    android:id="@+id/imagePage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:scaleType="fitCenter"
+                    android:contentDescription="@null" />
+            </HorizontalScrollView>
+        </ScrollView>
+
+        <WebView
+            android:id="@+id/webViewEpub"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <ScrollView
+            android:id="@+id/scrollTxt"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:scrollbars="none">
+
+            <TextView
+                android:id="@+id/textTxtPage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:fontFamily="serif"
+                android:lineSpacingMultiplier="1.3"
+                android:textColor="@color/eink_page_text"
+                android:textSize="17sp"
+                tools:text="Era uma vez..." />
+        </ScrollView>
+
+        <ProgressBar
+            android:id="@+id/progressLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/eink_text_secondary"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/textError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:padding="32dp"
+            android:gravity="center"
+            android:text="@string/reader_error"
+            android:textColor="@color/eink_text_secondary"
+            android:textSize="15sp"
+            android:visibility="gone" />
+    </com.widney.leitoreink.ui.SwipeContainer>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/eink_divider" />
+
+    <!-- Barra inferior: navegação de página/capítulo -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:background="@color/eink_page_background">
+
+        <TextView
+            android:id="@+id/buttonPrev"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:text="‹"
+            android:textColor="@color/eink_text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textPageIndicator"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="@color/eink_text_secondary"
+            android:textSize="13sp"
+            tools:text="12 de 340" />
+
+        <TextView
+            android:id="@+id/buttonNext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:text="›"
+            android:textColor="@color/eink_text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>

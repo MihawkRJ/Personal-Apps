@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Tema base "papel". O pai é DayNight para que menus, diálogos e demais
+         componentes do Material sigam a escolha de tema feita dentro do app
+         (claro/escuro), em vez de ficarem sempre claros. -->
+    <style name="Theme.LeitorEInk" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/eink_text_primary</item>
+        <item name="colorPrimaryDark">@color/eink_text_primary</item>
+        <item name="colorAccent">@color/eink_text_primary</item>
+        <item name="colorControlNormal">@color/eink_text_primary</item>
+        <item name="colorControlActivated">@color/eink_text_primary</item>
+        <item name="colorSurface">@color/eink_surface</item>
+        <item name="colorOnSurface">@color/eink_text_primary</item>
+        <item name="colorOnBackground">@color/eink_text_primary</item>
+        <item name="android:colorBackground">@color/eink_background</item>
+        <item name="android:textColorPrimary">@color/eink_text_primary</item>
+        <item name="android:textColorSecondary">@color/eink_text_secondary</item>
+        <item name="android:statusBarColor" tools:targetApi="21">@color/eink_background</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="23">true</item>
+        <item name="android:navigationBarColor" tools:targetApi="21">@color/eink_background</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.LeitorEInk.Dialog</item>
+        <item name="popupMenuStyle">@style/Widget.LeitorEInk.PopupMenu</item>
+        <item name="actionOverflowMenuStyle">@style/Widget.LeitorEInk.PopupMenu.Overflow</item>
+    </style>
+
+    <!-- Fundo dos menus suspensos (⋮): usa a cor de superfície do tema atual,
+         que troca sozinha entre claro e escuro pelo values-night/colors.xml. -->
+    <style name="Widget.LeitorEInk.PopupMenu" parent="Widget.MaterialComponents.PopupMenu">
+        <item name="android:popupBackground">@drawable/bg_popup_menu</item>
+    </style>
+
+    <style name="Widget.LeitorEInk.PopupMenu.Overflow" parent="Widget.MaterialComponents.PopupMenu.Overflow">
+        <item name="android:popupBackground">@drawable/bg_popup_menu</item>
+    </style>
+
+    <!-- Tema aplicado só ao menu suspenso da toolbar (app:popupTheme). -->
+    <style name="ThemeOverlay.LeitorEInk.Popup" parent="ThemeOverlay.MaterialComponents.Light">
+        <item name="colorSurface">@color/eink_surface</item>
+        <item name="colorOnSurface">@color/eink_text_primary</item>
+        <item name="android:colorBackground">@color/eink_surface</item>
+        <item name="android:textColorPrimary">@color/eink_text_primary</item>
+        <item name="android:textColorSecondary">@color/eink_text_secondary</item>
+        <item name="popupMenuStyle">@style/Widget.LeitorEInk.PopupMenu</item>
+        <item name="actionOverflowMenuStyle">@style/Widget.LeitorEInk.PopupMenu.Overflow</item>
+    </style>
+
+    <style name="ThemeOverlay.LeitorEInk.Dialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="colorPrimary">@color/eink_text_primary</item>
+        <item name="colorSurface">@color/eink_surface</item>
+        <item name="colorOnSurface">@color/eink_text_primary</item>
+        <item name="android:textColorPrimary">@color/eink_text_primary</item>
+        <item name="android:textColorSecondary">@color/eink_text_secondary</item>
+        <item name="android:windowBackground">@color/eink_surface</item>
+    </style>
+
+    <!-- Tema da tela de leitura: fundo "papel", sem toolbar do sistema
+         (a própria activity desenha uma barra mínima). -->
+    <style name="Theme.LeitorEInk.Reader" parent="Theme.LeitorEInk">
+        <item name="android:windowBackground">@color/eink_page_background</item>
+        <item name="android:statusBarColor" tools:targetApi="21">@color/eink_page_background</item>
+        <item name="android:navigationBarColor" tools:targetApi="21">@color/eink_page_background</item>
+    </style>
+
+</resources>

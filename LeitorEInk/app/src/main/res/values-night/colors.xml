@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paleta "papel e-ink escuro": versão noturna do tema, com fundo quase preto
+         e texto claro levemente amarelado — como o modo noite de um e-reader,
+         não um Material Dark genérico. Os mesmos nomes de cor do values/colors.xml
+         são redefinidos aqui, então toda a UI troca de tema automaticamente. -->
+    <color name="eink_background">#171613</color>
+    <color name="eink_surface">#211F1B</color>
+    <color name="eink_text_primary">#E8E3D7</color>
+    <color name="eink_text_secondary">#A39D8E</color>
+    <color name="eink_divider">#3A382F</color>
+    <color name="eink_disabled">#55534A</color>
+    <color name="eink_accent">#E8E3D7</color>
+    <color name="eink_ripple">#1FE8E3D7</color>
+
+    <color name="eink_page_background">#121110</color>
+    <color name="eink_page_text">#E5E0D3</color>
+</resources>

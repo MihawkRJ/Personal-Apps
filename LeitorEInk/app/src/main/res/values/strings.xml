@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Leitor E-Ink</string>
+    <string name="copyright">© 2026 Widney Silva</string>
+
+    <!-- Sobre -->
+    <string name="menu_about">Sobre</string>
+    <string name="about_title">Leitor E-Ink</string>
+    <string name="about_message">Versão %1$s\n\n© 2026 Widney Silva\n\nCódigo aberto sob a Licença MIT.\ngithub.com/MihawkRJ/Personal-Apps</string>
+
+    <!-- Biblioteca -->
+    <string name="menu_add_folder">Adicionar pasta</string>
+    <string name="menu_add_file">Adicionar arquivo</string>
+    <string name="menu_refresh">Atualizar biblioteca</string>
+    <string name="menu_manage_folders">Gerenciar pastas</string>
+    <string name="menu_theme">Tema (claro/escuro)</string>
+    <string name="theme_light">Claro (papel)</string>
+    <string name="theme_dark">Escuro (noite)</string>
+    <string name="empty_library_title">Sua estante está vazia</string>
+    <string name="empty_library_subtitle">Toque no menu (⋮) acima para adicionar uma pasta com seus livros ou um arquivo avulso (PDF, EPUB ou TXT).</string>
+    <string name="scanning_message">Procurando livros…</string>
+    <string name="remove_book">Remover da biblioteca</string>
+    <string name="remove_book_confirm">Remover \"%1$s\" da biblioteca? O arquivo original não será apagado.</string>
+    <string name="cancel">Cancelar</string>
+    <string name="confirm">Remover</string>
+
+    <!-- Gerenciar pastas -->
+    <string name="folders_title">Pastas monitoradas</string>
+    <string name="no_folders">Nenhuma pasta adicionada ainda.</string>
+    <string name="remove_folder">Remover</string>
+    <string name="remove_folder_confirm">Parar de monitorar \"%1$s\"? Os livros já adicionados dela serão removidos da biblioteca (o arquivo original continua no seu celular).</string>
+    <string name="close">Fechar</string>
+
+    <!-- Leitor -->
+    <string name="content_description_back">Voltar</string>
+    <string name="reader_error">Não foi possível abrir este arquivo.</string>
+    <string name="page_indicator">%1$d de %2$d</string>
+    <string name="chapter_indicator">Capítulo %1$d de %2$d</string>
+    <string name="font_decrease">A-</string>
+    <string name="font_increase">A+</string>
+    <string name="mode_text">Texto</string>
+    <string name="mode_page">Página</string>
+    <string name="text_mode_unavailable">Não consegui extrair o texto deste PDF (provavelmente ele é digitalizado, ou seja, cada página é uma imagem). Continuando no modo página.</string>
+    <string name="text_mode_empty_page">(Esta página não tem texto — deve ser uma imagem. Use o modo Página para vê-la.)</string>
+    <string name="text_mode_hint">Modo texto: as linhas se ajustam sozinhas ao tamanho da letra (A- / A+).</string>
+</resources>

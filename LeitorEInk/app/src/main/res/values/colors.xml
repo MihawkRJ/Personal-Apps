@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paleta "papel e-ink": tons quentes de cinza/bege, sem cores vivas,
+         imitando a aparência de uma tela de tinta eletrônica (Kindle). -->
+    <color name="eink_background">#F2F0E9</color>
+    <color name="eink_surface">#FFFFFF</color>
+    <color name="eink_text_primary">#2B2B28</color>
+    <color name="eink_text_secondary">#6B6B66</color>
+    <color name="eink_divider">#D8D5CC</color>
+    <color name="eink_disabled">#B0ADA4</color>
+    <color name="eink_accent">#2B2B28</color>
+    <color name="eink_ripple">#1A2B2B28</color>
+
+    <!-- Cor de fundo da página de leitura (levemente diferente do fundo da biblioteca,
+         para lembrar o tom de "papel" do Kindle). -->
+    <color name="eink_page_background">#F7F6F1</color>
+    <color name="eink_page_text">#1A1A18</color>
+</resources>

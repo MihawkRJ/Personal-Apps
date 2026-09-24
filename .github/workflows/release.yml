@@ -1,0 +1,78 @@
+# Compila os apps e publica uma Release quando o versionName muda.
+# Leitor E-Ink -> tag leitor-eink-vX.Y com o APK anexado.
+#
+# Segredo opcional (Settings > Secrets and variables > Actions):
+#   DEBUG_KEYSTORE_BASE64  ~/.android/debug.keystore do PC do autor em base64, para
+#                          o APK instalar por cima das versões já instaladas.
+name: Publicar APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "LeitorEInk/**"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  leitor-eink:
+    runs-on: ubuntu-latest
+    env:
+      DIR: LeitorEInk
+      SLUG: leitor-eink
+      NOME: Leitor E-Ink
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versão
+        id: v
+        run: |
+          VER=$(grep -oP 'versionName\s*=\s*"\K[^"]+' "$DIR/app/build.gradle.kts")
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
+          echo "tag=$SLUG-v$VER" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Chave de assinatura
+        env:
+          DBG_B64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$DBG_B64" ]; then
+            mkdir -p ~/.android && echo "$DBG_B64" | base64 -d > ~/.android/debug.keystore
+          else
+            echo "::warning::Sem DEBUG_KEYSTORE_BASE64: o APK sai com outra assinatura."
+          fi
+
+      - name: Compilar
+        working-directory: ${{ env.DIR }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Guardar APK
+        run: cp "$DIR/app/build/outputs/apk/release/app-release.apk" "$DIR-v${{ steps.v.outputs.ver }}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.DIR }}-v${{ steps.v.outputs.ver }}
+          path: ${{ env.DIR }}-v${{ steps.v.outputs.ver }}.apk
+
+      - name: Publicar Release (só se a versão for nova)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.v.outputs.tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG já existe; aumente o versionName para publicar outra."
+          else
+            gh release create "$TAG" "$DIR-v${{ steps.v.outputs.ver }}.apk" \
+              --target "$GITHUB_SHA" \
+              --title "$NOME v${{ steps.v.outputs.ver }}" \
+              --notes "$NOME v${{ steps.v.outputs.ver }} · © 2026 Widney Silva · Licença MIT"
+          fi

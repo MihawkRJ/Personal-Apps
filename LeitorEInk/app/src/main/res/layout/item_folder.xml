@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Leitor E-Ink · Copyright (c) 2026 Widney Silva · Licença MIT -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="10dp">
+
+    <TextView
+        android:id="@+id/textFolderName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="@color/eink_text_primary"
+        android:textSize="15sp"
+        tools:text="E-books organizar" />
+
+    <TextView
+        android:id="@+id/buttonRemoveFolder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"
+        android:text="@string/remove_folder"
+        android:textColor="@color/eink_text_secondary"
+        android:textSize="13sp" />
+
+</LinearLayout>

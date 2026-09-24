@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Leitor E-Ink · Copyright (c) 2026 Widney Silva · Licença MIT -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="20dp"
+    android:paddingTop="20dp">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerFolders"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="320dp" />
+
+    <TextView
+        android:id="@+id/textNoFolders"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="16dp"
+        android:text="@string/no_folders"
+        android:textColor="@color/eink_text_secondary"
+        android:visibility="gone" />
+
+</LinearLayout>

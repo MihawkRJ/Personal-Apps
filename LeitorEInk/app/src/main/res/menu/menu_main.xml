@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_add_folder"
+        android:title="@string/menu_add_folder"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_add_file"
+        android:title="@string/menu_add_file"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_refresh"
+        android:title="@string/menu_refresh"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_manage_folders"
+        android:title="@string/menu_manage_folders"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_theme"
+        android:title="@string/menu_theme"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_about"
+        android:title="@string/menu_about"
+        app:showAsAction="never" />
+
+</menu>
