@@ -1,0 +1,348 @@
+<title>Revelador iPhone</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#141517; --panel:#1d1e21; --raise:#28292d; --line:#34353a; --line2:#46474d;
+  --text:#efede9; --muted:#a19e98; --faint:#77746f;
+  --accent:#e6b86e; --accent-ink:#1b1408; --accent-soft:rgba(230,184,110,.16);
+  --ok:#8fcb9d; --err:#ef8f80;
+  --ui:-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+  --mono:ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --st:0px; --sb:0px;
+}
+html.standalone{--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--ui);font-size:15px;line-height:1.4;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+button,input,select{font:inherit;color:inherit}
+button{touch-action:manipulation}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{display:flex;flex-direction:column;height:100%;height:100dvh;max-width:820px;margin:0 auto}
+.top{display:flex;align-items:center;gap:10px;padding:calc(8px + var(--st)) 16px 8px}
+.top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:650;letter-spacing:.01em}
+.top h1 small{display:block;font:500 10.5px var(--mono);color:var(--faint);letter-spacing:.06em;text-transform:uppercase}
+.pill{border:0;border-radius:999px;padding:8px 14px;background:var(--raise);font-weight:600;font-size:14.5px;min-width:84px;cursor:pointer}
+.pill.primary{background:var(--accent);color:var(--accent-ink)}
+.pill:disabled{opacity:.45}
+
+.stage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;padding:4px 16px;touch-action:none}
+.frame{position:relative;line-height:0;border-radius:4px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.frame canvas{display:block}
+#cvOrig{position:absolute;inset:0;width:100%;height:100%;opacity:0}
+.frame.showorig #cvOrig{opacity:1}
+.badge{position:absolute;top:10px;left:10px;font:600 10.5px/1 var(--mono);letter-spacing:.1em;background:rgba(10,10,12,.7);color:#fff;padding:6px 8px;border-radius:4px;opacity:0;pointer-events:none}
+.frame.showorig .badge{opacity:1}
+.hint{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--muted);white-space:nowrap;pointer-events:none}
+.busy{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(20,21,23,.6);font-weight:600}
+
+.tray{background:var(--panel);border-top:1px solid var(--line);padding-bottom:var(--sb)}
+.intens{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:10px 16px 4px}
+.intens label{font-size:12.5px;color:var(--muted)}
+.intens output{font:500 12.5px var(--mono);color:var(--text);min-width:42px;text-align:right}
+input[type=range]{width:100%;accent-color:var(--accent);height:28px;margin:0}
+
+.strip{display:flex;gap:10px;overflow-x:auto;padding:10px 16px 12px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.it{flex:0 0 auto;width:78px;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:0;cursor:pointer;scroll-snap-align:start}
+.it .th{width:78px;height:78px;border-radius:8px;background:#0e0e10 center/cover no-repeat;border:2px solid transparent}
+.it .nm{font-size:11.5px;line-height:1.15;text-align:center;color:var(--muted);max-width:78px}
+.it .sb{font:10px var(--mono);color:var(--faint);margin-top:-4px;text-align:center}
+.it[aria-pressed="true"] .th{border-color:var(--accent)}
+.it[aria-pressed="true"] .nm{color:var(--accent);font-weight:600}
+
+.panel{padding:8px 16px 12px;max-height:36vh;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:0 10px}
+.row label{font-size:13.5px}
+.row output{font:500 12px var(--mono);color:var(--muted)}
+.row input{grid-column:1/-1}
+.tgl{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.tgl div{flex:1}
+.tgl b{display:block;font-size:14.5px;font-weight:600}
+.tgl span{font-size:12.5px;color:var(--muted)}
+.sw{appearance:none;-webkit-appearance:none;width:50px;height:30px;border-radius:15px;background:var(--line2);position:relative;flex:0 0 auto;cursor:pointer;margin:0;transition:background .15s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw:checked{background:var(--accent)}
+.sw:checked::after{transform:translateX(20px)}
+.tgl.fix{width:100%;text-align:left;cursor:pointer}
+.tgl.fix svg{width:28px;height:28px;flex:0 0 auto;fill:none;stroke:var(--accent);stroke-width:1.6}
+.tgl.fix[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;border-radius:8px;padding:8px 2px;font-size:13.5px;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--raise);color:var(--accent);font-weight:600}
+.fixbusy{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,10,12,.85);font-size:13px;padding:7px 13px;border-radius:20px;white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums}
+.link{background:none;border:0;color:var(--accent);padding:6px 0;text-align:left;font-size:14px;cursor:pointer}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.field.full{grid-column:1/-1}
+select{background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:10px;font-size:16px;color:var(--text)}
+.big{border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:650;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.big.alt{background:#fff;color:#111}
+.big:disabled{opacity:.5}
+.status{font-size:13px;color:var(--muted);min-height:18px}
+.status.ok{color:var(--ok)}.status.err{color:var(--err)}
+.note{font-size:12px;color:var(--faint);margin:0}
+
+.tabs{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line)}
+.tabs button{background:none;border:0;padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--muted);cursor:pointer}
+.tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7}
+.tabs button[aria-selected="true"]{color:var(--accent)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <input type="file" id="file" accept="image/*,.heic,.heif" hidden>
+    <button class="pill" id="btnOpen" type="button">Fotos</button>
+    <h1>Revelador<small id="info">exemplo</small></h1>
+    <button class="pill primary" id="btnQuick" type="button">Salvar</button>
+  </header>
+
+  <main class="stage" id="stage">
+    <div class="frame" id="frame">
+      <canvas id="cvOut"></canvas>
+      <canvas id="cvOrig"></canvas>
+      <span class="badge">ORIGINAL</span>
+    </div>
+    <div class="hint" id="hint">Toque e segure a foto para ver o original</div>
+    <div class="busy" id="busy" hidden>Processando…</div>
+    <div class="fixbusy" id="fixBusy" hidden></div>
+  </main>
+
+  <section class="tray">
+    <div class="intens" id="intensRow">
+      <label for="intensity">Intensidade</label>
+      <input type="range" id="intensity" min="0" max="150" step="1" value="100">
+      <output id="oInt">100%</output>
+    </div>
+    <div class="strip" id="strip" role="listbox" aria-label="Predefinições"></div>
+
+    <div class="panel" id="pFine" hidden></div>
+
+    <div class="panel" id="pFix" hidden>
+      <button class="tgl fix" id="fixOn" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/></svg><div><b>Corrigir foto tremida ou desfocada</b><span id="fixDiag">Toque para analisar a foto e corrigir automaticamente.</span></div></button>
+      <div class="seg" id="fixModes" hidden>
+        <button type="button" data-mode="auto">Auto</button><button type="button" data-mode="motion">Tremido</button><button type="button" data-mode="defocus">Foco</button><button type="button" data-mode="sharp">Leve</button>
+      </div>
+      <div class="row" id="fixAmtRow" hidden><label for="fixAmt">Força da correção</label><output id="oFixAmt">100%</output><input type="range" id="fixAmt" min="0" max="150" step="1" value="100"></div>
+      <div class="row" id="fixAngRow" hidden><label for="fixAng">Direção do tremido</label><output id="oFixAng">0°</output><input type="range" id="fixAng" min="0" max="179" step="1" value="0"></div>
+      <div class="row" id="fixLenRow" hidden><label for="fixLen">Tamanho do borrão</label><output id="oFixLen">—</output><input type="range" id="fixLen" min="1" max="100" step="1" value="20"></div>
+      <p class="note">Corrige só o brilho dos detalhes: cores e enquadramento ficam como no original. Funciona melhor em tremidos e desfoques leves a moderados.</p>
+    </div>
+
+    <div class="panel" id="pOpts" hidden>
+      <label class="tgl"><div><b>Correção automática</b><span>Balanço de branco e níveis pela própria foto</span></div><input class="sw" type="checkbox" id="optAuto"></label>
+      <label class="tgl"><div><b>Preservar luz original</b><span>Muda só a cor, mantém brilho e contraste</span></div><input class="sw" type="checkbox" id="optLuma"></label>
+      <label class="tgl"><div><b>Proteger tons de pele</b><span>Pele natural mesmo com grading forte</span></div><input class="sw" type="checkbox" id="optSkin"></label>
+      <button class="link" id="btnReset" type="button">Voltar ao original (sem alterações)</button>
+    </div>
+
+    <div class="panel" id="pSave" hidden>
+      <div class="two">
+        <label class="field">Formato
+          <select id="fmt"><option value="jpeg">JPEG</option><option value="png">PNG</option></select>
+        </label>
+        <label class="field">Qualidade
+          <select id="q"><option value="1">Máxima</option><option value="0.95" selected>Alta</option><option value="0.88">Web</option></select>
+        </label>
+        <label class="field full">Tamanho
+          <select id="size">
+            <option value="0">Resolução original</option>
+            <option value="3840">4K UHD · 3840 px</option>
+            <option value="2560">QHD · 2560 px</option>
+            <option value="1920">Full HD · 1920 px</option>
+          </select>
+        </label>
+      </div>
+      <button class="big" id="btnExport" type="button">Gerar foto editada</button>
+      <button class="big alt" id="btnShare" type="button" hidden>Salvar no Fotos / Compartilhar</button>
+      <div class="status" id="status" role="status"></div>
+      <p class="note" id="capNote">Tudo roda no aparelho; a foto não é enviada a nenhum servidor. Os dados EXIF não são copiados.</p>
+    </div>
+
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="scene" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Luz</button>
+      <button type="button" role="tab" data-tab="grade"><svg viewBox="0 0 24 24"><circle cx="9" cy="10" r="5.5"/><circle cx="15" cy="10" r="5.5"/><circle cx="12" cy="15" r="5.5"/></svg>Grading</button>
+      <button type="button" role="tab" data-tab="cam"><svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="14" height="10" rx="2"/><path d="M16.5 10.5l5-3v9l-5-3"/></svg>Câmera</button>
+      <button type="button" role="tab" data-tab="fine"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Ajustes</button>
+      <button type="button" role="tab" data-tab="fix"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/></svg>Nitidez</button>
+      <button type="button" role="tab" data-tab="opts"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.2 5.5.8-4 3.9 1 5.6L12 15.8 7 18.5l1-5.6-4-3.9 5.5-.8z"/></svg>Auto</button>
+      <button type="button" role="tab" data-tab="save"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Salvar</button>
+    </nav>
+  </section>
+</div>
+
+<script>
+"use strict";
+/*PRESETS*/
+const S = {scene:"none", grade:"none", cam:"none", intensity:1, auto:false, keepLuma:false, skin:false,
+  fine:Object.fromEntries(FINE.map(f=>[f.k,0])), tab:"scene"};
+let src=null, srcName="exemplo", stats=null, W=0, H=0, origData=null, outData=null, thumbs={};
+const $=id=>document.getElementById(id);
+const cvOut=$("cvOut"), cvOrig=$("cvOrig"), ctxOut=cvOut.getContext("2d"), ctxOrig=cvOrig.getContext("2d");
+const IS_IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+// Safari no iOS limita cada canvas a ~16,7 milhões de pixels.
+const MAX_PX=IS_IOS?16_000_000:200_000_000;
+/*ENGINE*/
+/*SHARPEN*/
+/*SAMPLE*/
+
+/* ---------- Carregamento ---------- */
+function fitSize(w,h){const max=IS_IOS?1600:2000;const s=Math.min(1,max/Math.max(w,h));return [Math.max(1,Math.round(w*s)),Math.max(1,Math.round(h*s))];}
+function layoutCanvas(){
+  if(!W)return; const st=$("stage"), aw=st.clientWidth-32, ah=st.clientHeight-8;
+  const s=Math.min(aw/W,ah/H); cvOut.style.width=Math.floor(W*s)+"px"; cvOut.style.height=Math.floor(H*s)+"px";
+}
+addEventListener("resize",layoutCanvas);
+function setSource(img,name){
+  src=img; srcName=name; const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+  [W,H]=fitSize(iw,ih); cvOut.width=cvOrig.width=W; cvOut.height=cvOrig.height=H;
+  ctxOrig.imageSmoothingQuality="high"; ctxOrig.drawImage(img,0,0,W,H);
+  origData=ctxOrig.getImageData(0,0,W,H); outData=ctxOut.createImageData(W,H); stats=computeStats(origData); fixOnNewImage();
+  $("info").textContent=`${iw}×${ih} · ${(iw*ih/1e6).toFixed(1)} MP`;
+  layoutCanvas(); buildThumbs(); renderStrip(); schedule(); resetShare();
+}
+function loadFile(f){
+  if(!f)return;
+  const url=URL.createObjectURL(f), img=new Image();
+  $("busy").hidden=false;
+  img.onload=()=>{$("busy").hidden=true;setSource(img,f.name.replace(/\.[^.]+$/,"")||"foto");};
+  img.onerror=()=>{$("busy").hidden=true;setStatus("Não consegui abrir essa imagem. No iPhone, HEIC abre no Safari; em outros navegadores use JPG.","err");switchTab("save");};
+  img.src=url;
+}
+$("btnOpen").onclick=()=>$("file").click();
+$("file").onchange=e=>{loadFile(e.target.files[0]);e.target.value="";};
+
+/* ---------- Render ---------- */
+function opts(){return {auto:S.auto,keepLuma:S.keepLuma,skin:S.skin};}
+let pending=false;
+function schedule(){resetShare();if(!pending){pending=true;requestAnimationFrame(render);}}
+function render(){pending=false;if(!origData)return;const P=buildParams();
+  applyRows((baseData||origData).data,outData.data,buildLUT(makeTransform(P,opts(),stats)),W,H,P,0,H);ctxOut.putImageData(outData,0,0);}
+
+/*FIXUI*/
+
+/* ---------- Segurar para ver o original ---------- */
+const frame=$("frame");
+const showO=v=>{frame.classList.toggle("showorig",v);if(v)$("hint").hidden=true;};
+$("stage").addEventListener("pointerdown",e=>{if(e.target.closest(".frame"))showO(true);});
+["pointerup","pointercancel","pointerleave"].forEach(t=>$("stage").addEventListener(t,()=>showO(false)));
+$("stage").addEventListener("contextmenu",e=>e.preventDefault());
+
+/* ---------- Faixa de predefinições ---------- */
+const LISTS={scene:SCENES,grade:GRADES,cam:CAMS};
+function buildThumbs(){
+  const t=120,c=document.createElement("canvas");c.width=t;c.height=t;const x=c.getContext("2d");
+  const iw=src.naturalWidth||src.width, ih=src.naturalHeight||src.height, s=Math.max(t/iw,t/ih);
+  x.drawImage(src,(t-iw*s)/2,(t-ih*s)/2,iw*s,ih*s);
+  const base=x.getImageData(0,0,t,t), out=x.createImageData(t,t); thumbs={};
+  Object.entries(LISTS).forEach(([k,list])=>list.forEach(pr=>{
+    const P=neutral(); addP(P,pr.p,1); P.mono=Math.min(1,P.mono); P.whites=Math.min(1,P.whites);
+    applyRows(base.data,out.data,buildLUT(makeTransform(P,{},null)),t,t,P,0,t);
+    x.putImageData(out,0,0); thumbs[k+":"+pr.id]=c.toDataURL("image/jpeg",.8);
+  }));
+}
+function renderStrip(){
+  const k=S.tab, list=LISTS[k], el=$("strip"); if(!list)return; el.innerHTML="";
+  list.forEach(pr=>{
+    const b=document.createElement("button");b.type="button";b.className="it";b.setAttribute("role","option");
+    b.setAttribute("aria-pressed",S[k]===pr.id);
+    b.innerHTML=`<span class="th"></span><span class="nm"></span>${pr.sb?'<span class="sb"></span>':""}`;
+    b.querySelector(".th").style.backgroundImage=`url(${thumbs[k+":"+pr.id]||""})`;
+    b.querySelector(".nm").textContent=pr.nm; if(pr.sb)b.querySelector(".sb").textContent=pr.sb;
+    b.onclick=()=>{S[k]=pr.id;el.querySelectorAll(".it").forEach(i=>i.setAttribute("aria-pressed",i===b));schedule();};
+    el.appendChild(b);
+  });
+  const sel=el.querySelector('[aria-pressed="true"]'); if(sel)sel.scrollIntoView({inline:"center",block:"nearest"});
+}
+function switchTab(t){
+  S.tab=t;
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+  const isStrip=!!LISTS[t];
+  $("strip").hidden=!isStrip; $("intensRow").hidden=!isStrip;
+  $("pFine").hidden=t!=="fine"; $("pFix").hidden=t!=="fix"; $("pOpts").hidden=t!=="opts"; $("pSave").hidden=t!=="save";
+  if(isStrip)renderStrip(); layoutCanvas();
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+
+/* ---------- Ajustes e opções ---------- */
+FINE.forEach(f=>{
+  const d=document.createElement("div");d.className="row";
+  d.innerHTML=`<label for="f_${f.k}"></label><output id="o_${f.k}"></output><input type="range" id="f_${f.k}" min="${f.min}" max="${f.max}" step="${f.step}" value="0">`;
+  d.querySelector("label").textContent=f.nm; $("pFine").appendChild(d);
+  const inp=d.querySelector("input");
+  inp.addEventListener("input",()=>{S.fine[f.k]=parseFloat(inp.value);$("o_"+f.k).textContent=f.fmt(S.fine[f.k]);schedule();});
+  $("o_"+f.k).textContent=f.fmt(0);
+});
+const fr=document.createElement("button");fr.className="link";fr.type="button";fr.textContent="Zerar ajustes";
+fr.onclick=()=>{FINE.forEach(f=>{S.fine[f.k]=0;$("f_"+f.k).value=0;$("o_"+f.k).textContent=f.fmt(0);});schedule();};
+$("pFine").appendChild(fr);
+$("intensity").addEventListener("input",e=>{S.intensity=e.target.value/100;$("oInt").textContent=e.target.value+"%";schedule();});
+[["optAuto","auto"],["optLuma","keepLuma"],["optSkin","skin"]].forEach(([id,k])=>$(id).addEventListener("change",e=>{S[k]=e.target.checked;schedule();}));
+$("btnReset").onclick=()=>{fixReset();Object.assign(S,{scene:"none",grade:"none",cam:"none",intensity:1,auto:false,keepLuma:false,skin:false});
+  FINE.forEach(f=>{S.fine[f.k]=0;$("f_"+f.k).value=0;$("o_"+f.k).textContent=f.fmt(0);});
+  $("intensity").value=100;$("oInt").textContent="100%";["optAuto","optLuma","optSkin"].forEach(i=>$(i).checked=false);schedule();};
+
+/* ---------- Exportação ---------- */
+let dl=null, readyFile=null;
+(async()=>{try{if(window.claude&&window.claude.use)dl=await window.claude.use("downloads");}catch(_){dl=null;}})();
+function setStatus(t,c){const s=$("status");s.textContent=t;s.className="status"+(c?" "+c:"");}
+function resetShare(){readyFile=null;$("btnShare").hidden=true;}
+async function doExport(){
+  if(!src)return; const b=$("btnExport"); b.disabled=true; resetShare();
+  try{
+    const iw=src.naturalWidth||src.width, ih=src.naturalHeight||src.height, target=+$("size").value;
+    let s=target?target/Math.max(iw,ih):1; let capped=false;
+    if(iw*ih*s*s>MAX_PX){s=Math.sqrt(MAX_PX/(iw*ih));capped=true;}
+    const w=Math.round(iw*s), h=Math.round(ih*s);
+    const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");
+    x.imageSmoothingQuality="high";x.drawImage(src,0,0,w,h);
+    const P=buildParams(), lut=buildLUT(makeTransform(P,opts(),stats));
+    const img=x.getImageData(0,0,w,h), d=img.data, chunk=Math.max(16,Math.floor(300000/w));
+    const cfgF=fixCfg(); if(cfgF)await sharpenRGBA(d,w,h,cfgF,p=>setStatus(`Corrigindo nitidez… ${Math.round(p*100)}%`));
+    for(let y=0;y<h;y+=chunk){applyRows(d,d,lut,w,h,P,y,Math.min(h,y+chunk));
+      setStatus(`Processando ${w}×${h}… ${Math.round(Math.min(h,y+chunk)/h*100)}%`);await new Promise(r=>setTimeout(r,0));}
+    x.putImageData(img,0,0);
+    const fmt=$("fmt").value, mime="image/"+fmt;
+    const blob=await new Promise(r=>c.toBlob(r,mime,fmt==="png"?undefined:+$("q").value));
+    c.width=c.height=1;
+    if(!blob)throw new Error("o aparelho ficou sem memória para gerar a imagem. Tente um tamanho menor.");
+    const ext=fmt==="jpeg"?"jpg":"png", tags=[S.scene,S.grade,S.cam].filter(v=>v!=="none").join("-")||"original";
+    const filename=`${srcName}_${tags}.${ext}`, mb=(blob.size/1048576).toFixed(1);
+    const capMsg=capped?" · reduzida ao limite do Safari (16 MP)":"";
+    if(dl){
+      setStatus("Confirme para salvar.");
+      try{await dl.save({filename,data:blob});setStatus(`Pronta: ${w}×${h}, ${mb} MB${capMsg}`,"ok");}
+      catch(e){setStatus(e&&e.code==="declined"?"Cancelado.":"Não foi possível salvar aqui ("+(e&&e.code||"erro")+").",e&&e.code==="declined"?"":"err");}
+      return;
+    }
+    const file=new File([blob],filename,{type:mime});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      readyFile=file;$("btnShare").hidden=false;
+      setStatus(`Pronta: ${w}×${h}, ${mb} MB${capMsg}. Toque em “Salvar no Fotos” e escolha “Salvar Imagem”.`,"ok");
+    }else{
+      const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),8000);setStatus(`Baixada: ${filename} (${mb} MB)${capMsg}`,"ok");
+    }
+  }catch(e){setStatus("Falha ao gerar: "+(e&&e.message||e),"err");}
+  finally{b.disabled=false;}
+}
+// O compartilhamento precisa acontecer direto no toque, por isso é um segundo botão.
+$("btnShare").onclick=async()=>{
+  if(!readyFile)return;
+  try{await navigator.share({files:[readyFile]});setStatus("Foto enviada.","ok");}
+  catch(e){if(e&&e.name!=="AbortError")setStatus("Não foi possível abrir o compartilhamento: "+e.message,"err");}
+};
+$("btnExport").onclick=doExport;
+$("btnQuick").onclick=()=>{switchTab("save");doExport();};
+
+/* ---------- Início ---------- */
+S.scene="golden";S.cam="arri";
+switchTab("scene");
+setSource(makeSample(),"exemplo");
+$("info").textContent="foto de exemplo";
+if("serviceWorker" in navigator&&location.protocol==="https:"&&document.documentElement.classList.contains("standalone-build")){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
