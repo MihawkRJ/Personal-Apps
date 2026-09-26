@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="pt-BR" class="standalone standalone-build">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Revelador</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Revelador">
+<meta name="theme-color" content="#141517">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#141517; --panel:#1d1e21; --raise:#28292d; --line:#34353a; --line2:#46474d;
+  --text:#efede9; --muted:#a19e98; --faint:#77746f;
+  --accent:#e6b86e; --accent-ink:#1b1408; --accent-soft:rgba(230,184,110,.16);
+  --ok:#8fcb9d; --err:#ef8f80;
+  --ui:-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+  --mono:ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --st:0px; --sb:0px;
+}
+html.standalone{--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--ui);font-size:15px;line-height:1.4;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+button,input,select{font:inherit;color:inherit}
+button{touch-action:manipulation}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{display:flex;flex-direction:column;height:100%;height:100dvh;max-width:820px;margin:0 auto}
+.top{display:flex;align-items:center;gap:10px;padding:calc(8px + var(--st)) 16px 8px}
+.top h1{flex:1;margin:0;text-align:center;font-size:16px;font-weight:650;letter-spacing:.01em}
+.top h1 small{display:block;font:500 10.5px var(--mono);color:var(--faint);letter-spacing:.06em;text-transform:uppercase}
+.pill{border:0;border-radius:999px;padding:8px 14px;background:var(--raise);font-weight:600;font-size:14.5px;min-width:84px;cursor:pointer}
+.pill.primary{background:var(--accent);color:var(--accent-ink)}
+.pill:disabled{opacity:.45}
+
+.stage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;padding:4px 16px;touch-action:none}
+.frame{position:relative;line-height:0;border-radius:4px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.frame canvas{display:block}
+#cvOrig{position:absolute;inset:0;width:100%;height:100%;opacity:0}
+.frame.showorig #cvOrig{opacity:1}
+.badge{position:absolute;top:10px;left:10px;font:600 10.5px/1 var(--mono);letter-spacing:.1em;background:rgba(10,10,12,.7);color:#fff;padding:6px 8px;border-radius:4px;opacity:0;pointer-events:none}
+.frame.showorig .badge{opacity:1}
+.hint{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--muted);white-space:nowrap;pointer-events:none}
+.busy{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(20,21,23,.6);font-weight:600}
+
+.tray{background:var(--panel);border-top:1px solid var(--line);padding-bottom:var(--sb)}
+.intens{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:10px 16px 4px}
+.intens label{font-size:12.5px;color:var(--muted)}
+.intens output{font:500 12.5px var(--mono);color:var(--text);min-width:42px;text-align:right}
+input[type=range]{width:100%;accent-color:var(--accent);height:28px;margin:0}
+
+.strip{display:flex;gap:10px;overflow-x:auto;padding:10px 16px 12px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.it{flex:0 0 auto;width:78px;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:0;cursor:pointer;scroll-snap-align:start}
+.it .th{width:78px;height:78px;border-radius:8px;background:#0e0e10 center/cover no-repeat;border:2px solid transparent}
+.it .nm{font-size:11.5px;line-height:1.15;text-align:center;color:var(--muted);max-width:78px}
+.it .sb{font:10px var(--mono);color:var(--faint);margin-top:-4px;text-align:center}
+.it[aria-pressed="true"] .th{border-color:var(--accent)}
+.it[aria-pressed="true"] .nm{color:var(--accent);font-weight:600}
+
+.panel{padding:8px 16px 12px;max-height:36vh;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:0 10px}
+.row label{font-size:13.5px}
+.row output{font:500 12px var(--mono);color:var(--muted)}
+.row input{grid-column:1/-1}
+.tgl{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.tgl div{flex:1}
+.tgl b{display:block;font-size:14.5px;font-weight:600}
+.tgl span{font-size:12.5px;color:var(--muted)}
+.sw{appearance:none;-webkit-appearance:none;width:50px;height:30px;border-radius:15px;background:var(--line2);position:relative;flex:0 0 auto;cursor:pointer;margin:0;transition:background .15s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw:checked{background:var(--accent)}
+.sw:checked::after{transform:translateX(20px)}
+.link{background:none;border:0;color:var(--accent);padding:6px 0;text-align:left;font-size:14px;cursor:pointer}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.field.full{grid-column:1/-1}
+select{background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:10px;font-size:16px;color:var(--text)}
+.big{border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:650;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.big.alt{background:#fff;color:#111}
+.big:disabled{opacity:.5}
+.status{font-size:13px;color:var(--muted);min-height:18px}
+.status.ok{color:var(--ok)}.status.err{color:var(--err)}
+.note{font-size:12px;color:var(--faint);margin:0}
+
+.tabs{display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line)}
+.tabs button{background:none;border:0;padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted);cursor:pointer}
+.tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7}
+.tabs button[aria-selected="true"]{color:var(--accent)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="app">
+  <header class="top">
+    <input type="file" id="file" accept="image/*,.heic,.heif" hidden>
+    <button class="pill" id="btnOpen" type="button">Fotos</button>
+    <h1>Revelador<small id="info">exemplo</small></h1>
+    <button class="pill primary" id="btnQuick" type="button">Salvar</button>
+  </header>
+
+  <main class="stage" id="stage">
+    <div class="frame" id="frame">
+      <canvas id="cvOut"></canvas>
+      <canvas id="cvOrig"></canvas>
+      <span class="badge">ORIGINAL</span>
+    </div>
+    <div class="hint" id="hint">Toque e segure a foto para ver o original</div>
+    <div class="busy" id="busy" hidden>Processando…</div>
+  </main>
+
+  <section class="tray">
+    <div class="intens" id="intensRow">
+      <label for="intensity">Intensidade</label>
+      <input type="range" id="intensity" min="0" max="150" step="1" value="100">
+      <output id="oInt">100%</output>
+    </div>
+    <div class="strip" id="strip" role="listbox" aria-label="Predefinições"></div>
+
+    <div class="panel" id="pFine" hidden></div>
+
+    <div class="panel" id="pOpts" hidden>
+      <label class="tgl"><div><b>Correção automática</b><span>Balanço de branco e níveis pela própria foto</span></div><input class="sw" type="checkbox" id="optAuto"></label>
+      <label class="tgl"><div><b>Preservar luz original</b><span>Muda só a cor, mantém brilho e contraste</span></div><input class="sw" type="checkbox" id="optLuma"></label>
+      <label class="tgl"><div><b>Proteger tons de pele</b><span>Pele natural mesmo com grading forte</span></div><input class="sw" type="checkbox" id="optSkin"></label>
+      <button class="link" id="btnReset" type="button">Voltar ao original (sem alterações)</button>
+    </div>
+
+    <div class="panel" id="pSave" hidden>
+      <div class="two">
+        <label class="field">Formato
+          <select id="fmt"><option value="jpeg">JPEG</option><option value="png">PNG</option></select>
+        </label>
+        <label class="field">Qualidade
+          <select id="q"><option value="1">Máxima</option><option value="0.95" selected>Alta</option><option value="0.88">Web</option></select>
+        </label>
+        <label class="field full">Tamanho
+          <select id="size">
+            <option value="0">Resolução original</option>
+            <option value="3840">4K UHD · 3840 px</option>
+            <option value="2560">QHD · 2560 px</option>
+            <option value="1920">Full HD · 1920 px</option>
+          </select>
+        </label>
+      </div>
+      <button class="big" id="btnExport" type="button">Gerar foto editada</button>
+      <button class="big alt" id="btnShare" type="button" hidden>Salvar no Fotos / Compartilhar</button>
+      <div class="status" id="status" role="status"></div>
+      <p class="note" id="capNote">Tudo roda no aparelho; a foto não é enviada a nenhum servidor. Os dados EXIF não são copiados.</p>
+    </div>
+
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="scene" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Luz</button>
+      <button type="button" role="tab" data-tab="grade"><svg viewBox="0 0 24 24"><circle cx="9" cy="10" r="5.5"/><circle cx="15" cy="10" r="5.5"/><circle cx="12" cy="15" r="5.5"/></svg>Grading</button>
+      <button type="button" role="tab" data-tab="cam"><svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="14" height="10" rx="2"/><path d="M16.5 10.5l5-3v9l-5-3"/></svg>Câmera</button>
+      <button type="button" role="tab" data-tab="fine"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Ajustes</button>
+      <button type="button" role="tab" data-tab="opts"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.2 5.5.8-4 3.9 1 5.6L12 15.8 7 18.5l1-5.6-4-3.9 5.5-.8z"/></svg>Auto</button>
+      <button type="button" role="tab" data-tab="save"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Salvar</button>
+    </nav>
+  </section>
+</div>
+
+<script>
+"use strict";
+/* ---------------- Predefinições ---------------- */
+// Parâmetros são deltas a partir do neutro. st/ht = tingimento de sombras/realces (RGB).
+const SCENES = [
+  {id:"none", nm:"Nenhuma", p:{}},
+  {id:"golden", nm:"Golden hour", p:{temp:.45,tint:.05,exposure:.1,contrast:.1,highlights:-.25,shadows:.15,sat:.08,vib:.22,ht:[.05,.02,-.05],st:[.02,0,-.02]}},
+  {id:"sunset", nm:"Fim de tarde", p:{temp:.6,tint:.14,exposure:-.1,contrast:.2,sat:.18,highlights:-.2,ht:[.06,0,-.03],st:[.01,-.01,.045],vignette:.25}},
+  {id:"blue", nm:"Hora azul", p:{temp:-.4,tint:.05,contrast:.1,shadows:.12,sat:.1,st:[-.02,0,.05],ht:[.03,.01,-.02]}},
+  {id:"night", nm:"Noturna", p:{exposure:.45,shadows:.55,highlights:-.45,whites:.55,contrast:.05,temp:-.08,vib:.18,st:[-.01,0,.025]}},
+  {id:"sunny", nm:"Dia ensolarado", p:{exposure:.05,contrast:.15,vib:.25,temp:.08,highlights:-.2,shadows:.05}},
+  {id:"cloudy", nm:"Nublado", p:{exposure:.15,contrast:.22,temp:.2,vib:.3,shadows:.1,highlights:-.1}},
+  {id:"indoor", nm:"Luz interna", p:{temp:-.35,tint:-.04,exposure:.1,shadows:.15,highlights:-.1,vib:.05}},
+  {id:"hdr", nm:"Contraluz", p:{shadows:.6,highlights:-.55,whites:.3,contrast:.08,vib:.12}},
+];
+const GRADES = [
+  {id:"none", nm:"Nenhum", p:{}},
+  {id:"teal", nm:"Teal & Orange", p:{st:[-.05,.02,.055],ht:[.06,.02,-.05],contrast:.15,sat:.03,vib:.1}},
+  {id:"muted", nm:"Cinema suave", p:{sat:-.22,contrast:-.05,blacks:.05,whites:.3,ht:[.02,.01,-.01],st:[-.01,.01,.02]}},
+  {id:"vintage", nm:"Filme vintage", p:{blacks:.08,whites:.45,sat:-.15,temp:.15,st:[.015,.03,-.02],ht:[.04,.02,-.04],grain:.35,vignette:.3}},
+  {id:"moody", nm:"Moody", p:{exposure:-.2,contrast:.22,sat:-.25,shadows:-.1,st:[-.02,.01,.03],vignette:.4,blacks:.03}},
+  {id:"bleach", nm:"Bleach bypass", p:{sat:-.5,contrast:.4,highlights:-.1,whites:.2}},
+  {id:"pastel", nm:"Pastel claro", p:{exposure:.15,contrast:-.22,blacks:.06,sat:-.1,ht:[.02,.005,.02]}},
+  {id:"chrome", nm:"Cromo vibrante", p:{sat:.25,contrast:.25,temp:.05,st:[0,0,.03],ht:[.03,.01,-.02]}},
+  {id:"bw", nm:"P&B clássico", p:{mono:1,contrast:.25,grain:.2}},
+];
+const CAMS = [
+  {id:"none", nm:"Sem perfil", sb:"cor da foto", p:{}},
+  {id:"arri", nm:"ARRI Alexa 35", sb:"LogC4 → Rec.709", p:{contrast:-.04,whites:.65,sat:-.06,ht:[.015,.005,-.012],st:[0,.004,.006],
+     matrix:[[1.03,-.04,.01],[-.02,.98,.04],[0,-.05,1.05]]}},
+  {id:"red", nm:"RED V-Raptor", sb:"IPP2 → Rec.709", p:{contrast:.15,whites:.35,sat:.08,st:[-.006,0,.012],
+     matrix:[[1.05,-.04,-.01],[-.02,1.04,-.02],[0,-.03,1.03]]}},
+  {id:"sony", nm:"Sony Venice 2", sb:"S-Cinetone", p:{contrast:.05,whites:.45,tint:.04,temp:.05,blacks:.01,
+     matrix:[[1.03,-.02,-.01],[-.01,1.0,.01],[0,-.02,1.02]]}},
+  {id:"canon", nm:"Canon C500 II", sb:"Cinema Gamut → 709", p:{temp:.1,sat:.1,contrast:.08,whites:.3,ht:[.01,.005,-.01],
+     matrix:[[1.06,-.04,-.02],[-.01,1.01,0],[-.01,-.03,1.04]]}},
+];
+const FINE = [
+  {k:"exposure", nm:"Exposição", min:-2, max:2, step:.05, fmt:v=>(v>0?"+":"")+v.toFixed(2)+" EV", scale:1},
+  {k:"temp", nm:"Temperatura", min:-100, max:100, step:1, fmt:v=>(v>0?"+":"")+v+(v>0?" quente":v<0?" fria":""), scale:.01},
+  {k:"tint", nm:"Matiz (verde ↔ magenta)", min:-100, max:100, step:1, fmt:v=>(v>0?"+":"")+v, scale:.01},
+  {k:"contrast", nm:"Contraste", min:-100, max:100, step:1, fmt:v=>(v>0?"+":"")+v, scale:.01},
+  {k:"highlights", nm:"Realces", min:-100, max:100, step:1, fmt:v=>(v>0?"+":"")+v, scale:.01},
+  {k:"shadows", nm:"Sombras", min:-100, max:100, step:1, fmt:v=>(v>0?"+":"")+v, scale:.01},
+  {k:"sat", nm:"Saturação", min:-100, max:100, step:1, fmt:v=>(v>0?"+":"")+v, scale:.01},
+  {k:"vib", nm:"Vibração", min:-100, max:100, step:1, fmt:v=>(v>0?"+":"")+v, scale:.01},
+  {k:"vignette", nm:"Vinheta", min:0, max:100, step:1, fmt:v=>v+"", scale:.01},
+  {k:"grain", nm:"Granulação", min:0, max:100, step:1, fmt:v=>v+"", scale:.01},
+];
+
+const S = {scene:"none", grade:"none", cam:"none", intensity:1, auto:false, keepLuma:false, skin:false,
+  fine:Object.fromEntries(FINE.map(f=>[f.k,0])), tab:"scene"};
+let src=null, srcName="exemplo", stats=null, W=0, H=0, origData=null, outData=null, thumbs={};
+const $=id=>document.getElementById(id);
+const cvOut=$("cvOut"), cvOrig=$("cvOrig"), ctxOut=cvOut.getContext("2d"), ctxOrig=cvOrig.getContext("2d");
+const IS_IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+// Safari no iOS limita cada canvas a ~16,7 milhões de pixels.
+const MAX_PX=IS_IOS?16_000_000:200_000_000;
+/* ---------------- Motor de cor ---------------- */
+const NUMK=["exposure","temp","tint","contrast","highlights","shadows","whites","blacks","sat","vib","mono","vignette","grain"];
+const I3=[[1,0,0],[0,1,0],[0,0,1]];
+function neutral(){const o={};NUMK.forEach(k=>o[k]=0);o.st=[0,0,0];o.ht=[0,0,0];o.matrix=null;return o;}
+function mmul(a,b){return a.map((r,i)=>[0,1,2].map(j=>r[0]*b[0][j]+r[1]*b[1][j]+r[2]*b[2][j]));}
+function addP(acc,p,s){
+  NUMK.forEach(k=>{if(p[k])acc[k]+=p[k]*s;});
+  if(p.st)for(let i=0;i<3;i++)acc.st[i]+=p.st[i]*s;
+  if(p.ht)for(let i=0;i<3;i++)acc.ht[i]+=p.ht[i]*s;
+  if(p.matrix){const m=I3.map((r,i)=>r.map((v,j)=>v+(p.matrix[i][j]-v)*s));acc.matrix=acc.matrix?mmul(m,acc.matrix):m;}
+}
+function buildParams(){
+  const P=neutral(), s=S.intensity;
+  [SCENES.find(x=>x.id===S.scene),GRADES.find(x=>x.id===S.grade),CAMS.find(x=>x.id===S.cam)].forEach(x=>x&&addP(P,x.p,s));
+  FINE.forEach(f=>{P[f.k]+=S.fine[f.k]*f.scale;});
+  P.mono=Math.min(1,P.mono); P.vignette=Math.max(0,Math.min(1.2,P.vignette)); P.grain=Math.max(0,P.grain);
+  P.whites=Math.max(0,Math.min(1,P.whites)); P.blacks=Math.max(0,Math.min(.3,P.blacks));
+  return P;
+}
+const lin=x=>x<=0?0:Math.pow(x,2.2), gam=x=>x<=0?0:Math.pow(x,1/2.2);
+const luma=(r,g,b)=>.2126*r+.7152*g+.0722*b;
+const clamp01=x=>x<0?0:x>1?1:x;
+function hueSat(r,g,b){const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;
+  if(d>1e-6){if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;if(h<0)h+=360;}
+  return [h, mx>0?d/mx:0, mx];}
+
+function makeTransform(P,opt,st){
+  const ev=Math.pow(2,P.exposure), M=P.matrix;
+  const wr=1+.22*P.temp, wb=1-.22*P.temp, wg=1-.12*P.tint;
+  const knee=1-.55*P.whites;
+  const k=Math.max(.35,1+P.contrast*1.1);
+  const useAuto=opt.auto&&st;
+  const gains=useAuto?st.gains:[1,1,1], bp=useAuto?st.bp:0, wp=useAuto?st.wp:1;
+  const shoulder=x=>{ if(x<=knee)return x; if(knee>=1)return 1; return knee+(1-knee)*(1-Math.exp(-(x-knee)/(1-knee))); };
+  const curve=x=>x<.5?.5*Math.pow(2*x,k):1-.5*Math.pow(2-2*x,k);
+  const hasTone=P.shadows!==0||P.highlights!==0, hasCurve=Math.abs(k-1)>1e-4;
+  const satF=1+P.sat;
+  return (r0,g0,b0)=>{
+    const oL=luma(r0,g0,b0);
+    let r=r0,g=g0,b=b0;
+    if(useAuto){const s=1/(wp-bp);r=(r-bp)*s;g=(g-bp)*s;b=(b-bp)*s;}
+    let R=lin(r)*gains[0]*wr*ev, G=lin(g)*gains[1]*wg*ev, B=lin(b)*gains[2]*wb*ev;
+    if(M){const a=M[0][0]*R+M[0][1]*G+M[0][2]*B, c=M[1][0]*R+M[1][1]*G+M[1][2]*B, d=M[2][0]*R+M[2][1]*G+M[2][2]*B;R=a;G=c;B=d;}
+    R=gam(shoulder(Math.max(0,R)));G=gam(shoulder(Math.max(0,G)));B=gam(shoulder(Math.max(0,B)));
+    r=clamp01(R);g=clamp01(G);b=clamp01(B);
+    if(hasTone){
+      const L=luma(r,g,b);
+      const dL=P.shadows*.55*Math.pow(1-L,3)*Math.pow(L,.6)+P.highlights*.55*L*L*L*Math.pow(1-L,.6);
+      if(L>1e-4){const f=Math.max(0,(L+dL)/L);r*=f;g*=f;b*=f;}else{r+=dL;g+=dL;b+=dL;}
+      r=clamp01(r);g=clamp01(g);b=clamp01(b);
+    }
+    if(hasCurve){r=curve(r);g=curve(g);b=curve(b);}
+    let L=luma(r,g,b);
+    if(P.sat!==0||P.vib!==0){
+      const mx=Math.max(r,g,b),mn=Math.min(r,g,b),s=mx-mn;
+      const f=Math.max(0,satF*(1+P.vib*(1-s)*(P.vib>0?1.1:1)));
+      r=L+(r-L)*f;g=L+(g-L)*f;b=L+(b-L)*f;
+    }
+    if(P.st[0]||P.st[1]||P.st[2]||P.ht[0]||P.ht[1]||P.ht[2]){
+      const ws=(1-L)*(1-L), wh=L*L;
+      let o0=P.st[0]*ws+P.ht[0]*wh,o1=P.st[1]*ws+P.ht[1]*wh,o2=P.st[2]*ws+P.ht[2]*wh;
+      const d=luma(o0,o1,o2); r+=o0-d; g+=o1-d; b+=o2-d;
+    }
+    if(P.blacks>0){const bl=P.blacks;r=bl+r*(1-bl);g=bl+g*(1-bl);b=bl+b*(1-bl);}
+    if(P.mono>0){const m=clamp01(.3*r+.59*g+.11*b);r+= (m-r)*P.mono;g+=(m-g)*P.mono;b+=(m-b)*P.mono;}
+    r=clamp01(r);g=clamp01(g);b=clamp01(b);
+    if(opt.keepLuma){const nL=luma(r,g,b);
+      if(nL>1e-4){const f=oL/nL;r*=f;g*=f;b*=f;}else{r=g=b=oL;}
+      const mx=Math.max(r,g,b); if(mx>1){r/=mx;g/=mx;b/=mx;}
+    }
+    if(opt.skin){
+      const [h,sat,v]=hueSat(r0,g0,b0);
+      let w=0;
+      if(h>=2&&h<=50&&sat>.12&&sat<.7&&v>.2){
+        const wh=h<10?(h-2)/8:h>38?(50-h)/12:1, ws=sat<.2?(sat-.12)/.08:sat>.58?(.7-sat)/.12:1, wv=v<.3?(v-.2)/.1:1;
+        w=Math.max(0,Math.min(1,wh*ws*wv))*.8;
+      }
+      if(w>0){const nL=luma(r,g,b), f=oL>1e-4?nL/oL:1;
+        r+=(clamp01(r0*f)-r)*w;g+=(clamp01(g0*f)-g)*w;b+=(clamp01(b0*f)-b)*w;}
+    }
+    return [clamp01(r),clamp01(g),clamp01(b)];
+  };
+}
+const N=33;
+function buildLUT(fn){
+  const lut=new Float32Array(N*N*N*3); let i=0;
+  for(let b=0;b<N;b++)for(let g=0;g<N;g++)for(let r=0;r<N;r++){const o=fn(r/(N-1),g/(N-1),b/(N-1));lut[i++]=o[0];lut[i++]=o[1];lut[i++]=o[2];}
+  return lut;
+}
+function hash(x,y,s){let h=(x*374761393+y*668265263+s*2147483647)|0;h=Math.imul(h^(h>>>13),1274126177);return ((h^(h>>>16))>>>0)/4294967296;}
+// Aplica LUT + efeitos espaciais (vinheta, grão) nas linhas [y0,y1)
+function applyRows(d,o,lut,w,h,P,y0,y1){
+  const n1=N-1, N2=N*N, vig=P.vignette, grain=P.grain*.11;
+  const cx=w/2, cy=h/2, rmax=Math.sqrt(cx*cx+cy*cy), gsz=Math.max(1,Math.round(Math.max(w,h)/1800));
+  for(let y=y0;y<y1;y++){
+    let p=y*w*4;
+    for(let x=0;x<w;x++,p+=4){
+      const fr=d[p]/255*n1, fg=d[p+1]/255*n1, fb=d[p+2]/255*n1;
+      let r0=fr|0,g0=fg|0,b0=fb|0; if(r0>=n1)r0=n1-1; if(g0>=n1)g0=n1-1; if(b0>=n1)b0=n1-1;
+      const dr=fr-r0,dg=fg-g0,db=fb-b0;
+      const i000=(b0*N2+g0*N+r0)*3, i100=i000+3, i010=i000+N*3, i110=i010+3, i001=i000+N2*3, i101=i001+3, i011=i001+N*3, i111=i011+3;
+      const w000=(1-dr)*(1-dg)*(1-db), w100=dr*(1-dg)*(1-db), w010=(1-dr)*dg*(1-db), w110=dr*dg*(1-db),
+            w001=(1-dr)*(1-dg)*db, w101=dr*(1-dg)*db, w011=(1-dr)*dg*db, w111=dr*dg*db;
+      let R=lut[i000]*w000+lut[i100]*w100+lut[i010]*w010+lut[i110]*w110+lut[i001]*w001+lut[i101]*w101+lut[i011]*w011+lut[i111]*w111;
+      let G=lut[i000+1]*w000+lut[i100+1]*w100+lut[i010+1]*w010+lut[i110+1]*w110+lut[i001+1]*w001+lut[i101+1]*w101+lut[i011+1]*w011+lut[i111+1]*w111;
+      let B=lut[i000+2]*w000+lut[i100+2]*w100+lut[i010+2]*w010+lut[i110+2]*w110+lut[i001+2]*w001+lut[i101+2]*w101+lut[i011+2]*w011+lut[i111+2]*w111;
+      if(vig>0){const dx=x-cx,dy=y-cy,rr=Math.sqrt(dx*dx+dy*dy)/rmax;
+        let t=(rr-.35)/.7; t=t<0?0:t>1?1:t; const f=1-vig*.75*t*t*(3-2*t); R*=f;G*=f;B*=f;}
+      if(grain>0){const L=.2126*R+.7152*G+.0722*B, n=(hash((x/gsz)|0,(y/gsz)|0,7)-.5)*grain*(1-Math.abs(2*L-1)*.5);R+=n;G+=n;B+=n;}
+      o[p]=R*255+.5; o[p+1]=G*255+.5; o[p+2]=B*255+.5; o[p+3]=d[p+3];
+    }
+  }
+}
+function computeStats(data){
+  const d=data.data, hist=new Uint32Array(256); let sr=0,sg=0,sb=0,n=0;
+  for(let p=0;p<d.length;p+=16){const r=d[p],g=d[p+1],b=d[p+2];const L=Math.round(luma(r,g,b));hist[L]++;
+    if(L>12&&L<245){sr+=lin(r/255);sg+=lin(g/255);sb+=lin(b/255);n++;}}
+  let tot=0;for(const v of hist)tot+=v;
+  let acc=0,lo=0,hi=255;for(let i=0;i<256;i++){acc+=hist[i];if(acc>=tot*.005){lo=i;break;}}
+  acc=0;for(let i=255;i>=0;i--){acc+=hist[i];if(acc>=tot*.005){hi=i;break;}}
+  const bp=Math.min(.12,lo/255)*.8, wp=Math.max(.75,hi/255)+(1-Math.max(.75,hi/255))*.2;
+  let gains=[1,1,1];
+  if(n>0){const mr=sr/n,mg=sg/n,mb=sb/n,avg=(mr+mg+mb)/3;
+    gains=[mr,mg,mb].map(m=>{const gn=Math.pow(avg/Math.max(m,1e-4),.5);return Math.max(.82,Math.min(1.22,gn));});}
+  return {bp,wp,gains};
+}
+
+
+function makeSample(){
+  const c=document.createElement("canvas");c.width=1800;c.height=1200;const x=c.getContext("2d");
+  let g=x.createLinearGradient(0,0,0,760);g.addColorStop(0,"#4f84bd");g.addColorStop(.55,"#9fc2df");g.addColorStop(1,"#ecd9bb");
+  x.fillStyle=g;x.fillRect(0,0,1800,780);
+  g=x.createRadialGradient(1260,600,10,1260,600,420);g.addColorStop(0,"rgba(255,248,225,1)");g.addColorStop(.12,"rgba(255,236,190,.9)");g.addColorStop(1,"rgba(255,220,170,0)");
+  x.fillStyle=g;x.fillRect(0,0,1800,780);
+  x.fillStyle="rgba(255,255,255,.55)";
+  [[300,190,160],[420,170,120],[540,200,140],[1350,250,130],[1450,230,100],[980,140,90]].forEach(([a,b,r])=>{x.beginPath();x.ellipse(a,b,r,r*.38,0,0,7);x.fill();});
+  const ridge=(base,amp,f1,f2,col)=>{x.beginPath();x.moveTo(0,1200);for(let i=0;i<=1800;i+=6){x.lineTo(i,base-amp*(.55*Math.sin(i*f1)+.3*Math.sin(i*f2+1.7)+.15*Math.sin(i*.031)));}x.lineTo(1800,1200);x.closePath();x.fillStyle=col;x.fill();};
+  ridge(640,110,.0042,.011,"#7d8fa6");
+  ridge(720,90,.0061,.017,"#4f6b58");
+  g=x.createLinearGradient(0,780,0,1200);g.addColorStop(0,"#7fa3c2");g.addColorStop(1,"#2b4a61");x.fillStyle=g;x.fillRect(0,780,1800,420);
+  x.globalAlpha=.35;x.fillStyle="#fff1d0";for(let i=0;i<40;i++){x.fillRect(1180+Math.sin(i*3.1)*60,800+i*9,160-i*2.5,2);}x.globalAlpha=1;
+  x.beginPath();x.moveTo(0,860);x.bezierCurveTo(300,820,560,860,760,960);x.bezierCurveTo(820,1040,700,1200,0,1200);x.closePath();
+  g=x.createLinearGradient(0,840,0,1200);g.addColorStop(0,"#5f8f3c");g.addColorStop(1,"#23401d");x.fillStyle=g;x.fill();
+  x.fillStyle="#a8452f";x.fillRect(360,835,110,70);x.fillStyle="#3d2a22";x.beginPath();x.moveTo(345,840);x.lineTo(415,795);x.lineTo(485,840);x.fill();
+  x.fillStyle="#f1d27a";x.fillRect(395,860,22,20);
+  x.fillStyle="#c98f6e";x.beginPath();x.arc(600,930,20,0,7);x.fill();x.fillStyle="#2f3b56";x.fillRect(582,950,36,70);
+  return c;
+}
+
+
+/* ---------- Carregamento ---------- */
+function fitSize(w,h){const max=IS_IOS?1600:2000;const s=Math.min(1,max/Math.max(w,h));return [Math.max(1,Math.round(w*s)),Math.max(1,Math.round(h*s))];}
+function layoutCanvas(){
+  if(!W)return; const st=$("stage"), aw=st.clientWidth-32, ah=st.clientHeight-8;
+  const s=Math.min(aw/W,ah/H); cvOut.style.width=Math.floor(W*s)+"px"; cvOut.style.height=Math.floor(H*s)+"px";
+}
+addEventListener("resize",layoutCanvas);
+function setSource(img,name){
+  src=img; srcName=name; const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+  [W,H]=fitSize(iw,ih); cvOut.width=cvOrig.width=W; cvOut.height=cvOrig.height=H;
+  ctxOrig.imageSmoothingQuality="high"; ctxOrig.drawImage(img,0,0,W,H);
+  origData=ctxOrig.getImageData(0,0,W,H); outData=ctxOut.createImageData(W,H); stats=computeStats(origData);
+  $("info").textContent=`${iw}×${ih} · ${(iw*ih/1e6).toFixed(1)} MP`;
+  layoutCanvas(); buildThumbs(); renderStrip(); schedule(); resetShare();
+}
+function loadFile(f){
+  if(!f)return;
+  const url=URL.createObjectURL(f), img=new Image();
+  $("busy").hidden=false;
+  img.onload=()=>{$("busy").hidden=true;setSource(img,f.name.replace(/\.[^.]+$/,"")||"foto");};
+  img.onerror=()=>{$("busy").hidden=true;setStatus("Não consegui abrir essa imagem. No iPhone, HEIC abre no Safari; em outros navegadores use JPG.","err");switchTab("save");};
+  img.src=url;
+}
+$("btnOpen").onclick=()=>$("file").click();
+$("file").onchange=e=>{loadFile(e.target.files[0]);e.target.value="";};
+
+/* ---------- Render ---------- */
+function opts(){return {auto:S.auto,keepLuma:S.keepLuma,skin:S.skin};}
+let pending=false;
+function schedule(){resetShare();if(!pending){pending=true;requestAnimationFrame(render);}}
+function render(){pending=false;if(!origData)return;const P=buildParams();
+  applyRows(origData.data,outData.data,buildLUT(makeTransform(P,opts(),stats)),W,H,P,0,H);ctxOut.putImageData(outData,0,0);}
+
+/* ---------- Segurar para ver o original ---------- */
+const frame=$("frame");
+const showO=v=>{frame.classList.toggle("showorig",v);if(v)$("hint").hidden=true;};
+$("stage").addEventListener("pointerdown",e=>{if(e.target.closest(".frame"))showO(true);});
+["pointerup","pointercancel","pointerleave"].forEach(t=>$("stage").addEventListener(t,()=>showO(false)));
+$("stage").addEventListener("contextmenu",e=>e.preventDefault());
+
+/* ---------- Faixa de predefinições ---------- */
+const LISTS={scene:SCENES,grade:GRADES,cam:CAMS};
+function buildThumbs(){
+  const t=120,c=document.createElement("canvas");c.width=t;c.height=t;const x=c.getContext("2d");
+  const iw=src.naturalWidth||src.width, ih=src.naturalHeight||src.height, s=Math.max(t/iw,t/ih);
+  x.drawImage(src,(t-iw*s)/2,(t-ih*s)/2,iw*s,ih*s);
+  const base=x.getImageData(0,0,t,t), out=x.createImageData(t,t); thumbs={};
+  Object.entries(LISTS).forEach(([k,list])=>list.forEach(pr=>{
+    const P=neutral(); addP(P,pr.p,1); P.mono=Math.min(1,P.mono); P.whites=Math.min(1,P.whites);
+    applyRows(base.data,out.data,buildLUT(makeTransform(P,{},null)),t,t,P,0,t);
+    x.putImageData(out,0,0); thumbs[k+":"+pr.id]=c.toDataURL("image/jpeg",.8);
+  }));
+}
+function renderStrip(){
+  const k=S.tab, list=LISTS[k], el=$("strip"); if(!list)return; el.innerHTML="";
+  list.forEach(pr=>{
+    const b=document.createElement("button");b.type="button";b.className="it";b.setAttribute("role","option");
+    b.setAttribute("aria-pressed",S[k]===pr.id);
+    b.innerHTML=`<span class="th"></span><span class="nm"></span>${pr.sb?'<span class="sb"></span>':""}`;
+    b.querySelector(".th").style.backgroundImage=`url(${thumbs[k+":"+pr.id]||""})`;
+    b.querySelector(".nm").textContent=pr.nm; if(pr.sb)b.querySelector(".sb").textContent=pr.sb;
+    b.onclick=()=>{S[k]=pr.id;el.querySelectorAll(".it").forEach(i=>i.setAttribute("aria-pressed",i===b));schedule();};
+    el.appendChild(b);
+  });
+  const sel=el.querySelector('[aria-pressed="true"]'); if(sel)sel.scrollIntoView({inline:"center",block:"nearest"});
+}
+function switchTab(t){
+  S.tab=t;
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+  const isStrip=!!LISTS[t];
+  $("strip").hidden=!isStrip; $("intensRow").hidden=!isStrip;
+  $("pFine").hidden=t!=="fine"; $("pOpts").hidden=t!=="opts"; $("pSave").hidden=t!=="save";
+  if(isStrip)renderStrip(); layoutCanvas();
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+
+/* ---------- Ajustes e opções ---------- */
+FINE.forEach(f=>{
+  const d=document.createElement("div");d.className="row";
+  d.innerHTML=`<label for="f_${f.k}"></label><output id="o_${f.k}"></output><input type="range" id="f_${f.k}" min="${f.min}" max="${f.max}" step="${f.step}" value="0">`;
+  d.querySelector("label").textContent=f.nm; $("pFine").appendChild(d);
+  const inp=d.querySelector("input");
+  inp.addEventListener("input",()=>{S.fine[f.k]=parseFloat(inp.value);$("o_"+f.k).textContent=f.fmt(S.fine[f.k]);schedule();});
+  $("o_"+f.k).textContent=f.fmt(0);
+});
+const fr=document.createElement("button");fr.className="link";fr.type="button";fr.textContent="Zerar ajustes";
+fr.onclick=()=>{FINE.forEach(f=>{S.fine[f.k]=0;$("f_"+f.k).value=0;$("o_"+f.k).textContent=f.fmt(0);});schedule();};
+$("pFine").appendChild(fr);
+$("intensity").addEventListener("input",e=>{S.intensity=e.target.value/100;$("oInt").textContent=e.target.value+"%";schedule();});
+[["optAuto","auto"],["optLuma","keepLuma"],["optSkin","skin"]].forEach(([id,k])=>$(id).addEventListener("change",e=>{S[k]=e.target.checked;schedule();}));
+$("btnReset").onclick=()=>{Object.assign(S,{scene:"none",grade:"none",cam:"none",intensity:1,auto:false,keepLuma:false,skin:false});
+  FINE.forEach(f=>{S.fine[f.k]=0;$("f_"+f.k).value=0;$("o_"+f.k).textContent=f.fmt(0);});
+  $("intensity").value=100;$("oInt").textContent="100%";["optAuto","optLuma","optSkin"].forEach(i=>$(i).checked=false);schedule();};
+
+/* ---------- Exportação ---------- */
+let dl=null, readyFile=null;
+(async()=>{try{if(window.claude&&window.claude.use)dl=await window.claude.use("downloads");}catch(_){dl=null;}})();
+function setStatus(t,c){const s=$("status");s.textContent=t;s.className="status"+(c?" "+c:"");}
+function resetShare(){readyFile=null;$("btnShare").hidden=true;}
+async function doExport(){
+  if(!src)return; const b=$("btnExport"); b.disabled=true; resetShare();
+  try{
+    const iw=src.naturalWidth||src.width, ih=src.naturalHeight||src.height, target=+$("size").value;
+    let s=target?target/Math.max(iw,ih):1; let capped=false;
+    if(iw*ih*s*s>MAX_PX){s=Math.sqrt(MAX_PX/(iw*ih));capped=true;}
+    const w=Math.round(iw*s), h=Math.round(ih*s);
+    const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");
+    x.imageSmoothingQuality="high";x.drawImage(src,0,0,w,h);
+    const P=buildParams(), lut=buildLUT(makeTransform(P,opts(),stats));
+    const img=x.getImageData(0,0,w,h), d=img.data, chunk=Math.max(16,Math.floor(300000/w));
+    for(let y=0;y<h;y+=chunk){applyRows(d,d,lut,w,h,P,y,Math.min(h,y+chunk));
+      setStatus(`Processando ${w}×${h}… ${Math.round(Math.min(h,y+chunk)/h*100)}%`);await new Promise(r=>setTimeout(r,0));}
+    x.putImageData(img,0,0);
+    const fmt=$("fmt").value, mime="image/"+fmt;
+    const blob=await new Promise(r=>c.toBlob(r,mime,fmt==="png"?undefined:+$("q").value));
+    c.width=c.height=1;
+    if(!blob)throw new Error("o aparelho ficou sem memória para gerar a imagem. Tente um tamanho menor.");
+    const ext=fmt==="jpeg"?"jpg":"png", tags=[S.scene,S.grade,S.cam].filter(v=>v!=="none").join("-")||"original";
+    const filename=`${srcName}_${tags}.${ext}`, mb=(blob.size/1048576).toFixed(1);
+    const capMsg=capped?" · reduzida ao limite do Safari (16 MP)":"";
+    if(dl){
+      setStatus("Confirme para salvar.");
+      try{await dl.save({filename,data:blob});setStatus(`Pronta: ${w}×${h}, ${mb} MB${capMsg}`,"ok");}
+      catch(e){setStatus(e&&e.code==="declined"?"Cancelado.":"Não foi possível salvar aqui ("+(e&&e.code||"erro")+").",e&&e.code==="declined"?"":"err");}
+      return;
+    }
+    const file=new File([blob],filename,{type:mime});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      readyFile=file;$("btnShare").hidden=false;
+      setStatus(`Pronta: ${w}×${h}, ${mb} MB${capMsg}. Toque em “Salvar no Fotos” e escolha “Salvar Imagem”.`,"ok");
+    }else{
+      const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),8000);setStatus(`Baixada: ${filename} (${mb} MB)${capMsg}`,"ok");
+    }
+  }catch(e){setStatus("Falha ao gerar: "+(e&&e.message||e),"err");}
+  finally{b.disabled=false;}
+}
+// O compartilhamento precisa acontecer direto no toque, por isso é um segundo botão.
+$("btnShare").onclick=async()=>{
+  if(!readyFile)return;
+  try{await navigator.share({files:[readyFile]});setStatus("Foto enviada.","ok");}
+  catch(e){if(e&&e.name!=="AbortError")setStatus("Não foi possível abrir o compartilhamento: "+e.message,"err");}
+};
+$("btnExport").onclick=doExport;
+$("btnQuick").onclick=()=>{switchTab("save");doExport();};
+
+/* ---------- Início ---------- */
+S.scene="golden";S.cam="arri";
+switchTab("scene");
+setSource(makeSample(),"exemplo");
+$("info").textContent="foto de exemplo";
+if("serviceWorker" in navigator&&location.protocol==="https:"&&document.documentElement.classList.contains("standalone-build")){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+
+</body>
+</html>
