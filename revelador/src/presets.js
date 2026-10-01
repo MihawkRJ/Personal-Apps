@@ -3,6 +3,8 @@
 const SCENES = [
   {id:"none", nm:"Nenhuma", p:{}},
   {id:"golden", nm:"Golden hour", p:{temp:.45,tint:.05,exposure:.1,contrast:.1,highlights:-.25,shadows:.15,sat:.08,vib:.22,ht:[.05,.02,-.05],st:[.02,0,-.02]}},
+  {id:"golden2", nm:"Golden hour ouro", p:{temp:.18,tint:.02,exposure:.04,contrast:.1,highlights:-.3,shadows:.12,vib:.18,ht:[.11,.045,-.09],st:[-.005,0,.012],whites:.2}},
+  {id:"golden3", nm:"Golden hour suave", p:{temp:.24,tint:.02,exposure:.04,contrast:.06,highlights:-.15,shadows:.08,vib:.14,ht:[.03,.012,-.025]}},
   {id:"sunset", nm:"Fim de tarde", p:{temp:.6,tint:.14,exposure:-.1,contrast:.2,sat:.18,highlights:-.2,ht:[.06,0,-.03],st:[.01,-.01,.045],vignette:.25}},
   {id:"blue", nm:"Hora azul", p:{temp:-.4,tint:.05,contrast:.1,shadows:.12,sat:.1,st:[-.02,0,.05],ht:[.03,.01,-.02]}},
   {id:"night", nm:"Noturna", p:{exposure:.45,shadows:.55,highlights:-.45,whites:.55,contrast:.05,temp:-.08,vib:.18,st:[-.01,0,.025]}},

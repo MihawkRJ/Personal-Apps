@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Golden hour: 5 variantes</title>
+<style>
+:root{--bg:#141517;--card:#1e2023;--tx:#e8e6e1;--mu:#9a9890;--ac:#e8a23a;--bd:#2d3035}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;padding:16px}
+h1{font-size:20px;margin:0 0 4px}.sub{color:var(--mu);margin:0 0 14px}
+.bar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:14px}
+.bar label{display:flex;gap:6px;align-items:center;color:var(--mu)}
+.bar select,.bar button,.bar input[type=file]{background:#2a2d31;color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px 9px;font:inherit}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+.card.sel{outline:2px solid var(--ac)}
+.cv{position:relative;line-height:0;touch-action:none;user-select:none;cursor:ew-resize}
+.cv canvas{width:100%;height:auto;display:block}
+.cv .after{position:absolute;inset:0}
+.cv .line{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 4px #0008}
+.tag{position:absolute;top:8px;font-size:11px;background:#000a;padding:2px 7px;border-radius:99px;line-height:1.4}
+.meta{padding:10px 12px}.meta b{display:block}.meta small{color:var(--mu)}
+.st{display:flex;gap:12px;margin-top:6px;font-size:12px;color:var(--mu);flex-wrap:wrap}
+.pick{margin-top:8px}.pick button{background:var(--ac);color:#241a08;border:0;border-radius:8px;padding:6px 12px;font-weight:600}
+</style>
+</head>
+<body>
+<h1>Golden hour: 5 variantes</h1>
+<p class="sub">Arraste sobre cada imagem para comparar com o original. Você pode carregar sua própria foto.</p>
+<div class="bar">
+  <label>Foto de teste <select id="img"></select></label>
+  <label>Sua foto <input type="file" id="file" accept="image/*"></label>
+  <label>Intensidade <input type="range" id="int" min="0" max="1.5" step=".05" value="1"><span id="intv">100%</span></label>
+  <label><input type="checkbox" id="auto">Auto</label>
+  <label><input type="checkbox" id="luma">Manter luminância</label>
+  <label><input type="checkbox" id="skin">Proteger pele</label>
+</div>
+<div class="grid" id="grid"></div>
+<script src="../../revelador/src/engine.js"></script>
+<script src="variants.js"></script>
+<script>
+/* ---- imagens de teste sintéticas ---- */
+function mk(w,h,fn){const c=document.createElement("canvas");c.width=w;c.height=h;fn(c.getContext("2d"),w,h);return c;}
+const TESTS={
+ paisagem:()=>makeSampleLocal(),
+ retrato:()=>mk(1200,1500,(x,w,h)=>{
+   let g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,"#8fb4d6");g.addColorStop(1,"#cfdbe3");x.fillStyle=g;x.fillRect(0,0,w,h);
+   x.fillStyle="#5a6f4a";x.fillRect(0,h*.78,w,h*.22);
+   x.fillStyle="#2e3b55";x.beginPath();x.ellipse(w/2,h*.98,w*.38,h*.3,0,0,7);x.fill();
+   x.fillStyle="#d9a57f";x.beginPath();x.ellipse(w/2,h*.45,w*.17,h*.19,0,0,7);x.fill();
+   x.fillStyle="#c58f6a";x.beginPath();x.ellipse(w/2+w*.05,h*.48,w*.1,h*.13,0,0,7);x.fill();
+   x.fillStyle="#3a2a20";x.beginPath();x.ellipse(w/2,h*.33,w*.18,h*.11,0,Math.PI,0);x.fill();
+   x.fillStyle="#d9a57f";x.fillRect(w/2-w*.05,h*.6,w*.1,h*.12);}),
+ nublado:()=>mk(1500,1000,(x,w,h)=>{
+   let g=x.createLinearGradient(0,0,0,h*.6);g.addColorStop(0,"#b9bfc4");g.addColorStop(1,"#dfe2e3");x.fillStyle=g;x.fillRect(0,0,w,h*.6);
+   x.fillStyle="#6c7b64";x.fillRect(0,h*.6,w,h*.4);
+   x.fillStyle="#8d9aa3";x.beginPath();x.moveTo(0,h*.6);for(let i=0;i<=w;i+=10)x.lineTo(i,h*.5-40*Math.sin(i*.006)-25*Math.sin(i*.017));x.lineTo(w,h*.6);x.fill();
+   x.fillStyle="#d7d3c9";x.fillRect(w*.55,h*.55,w*.18,h*.17);x.fillStyle="#7a4a3a";x.fillRect(w*.53,h*.5,w*.22,h*.06);}),
+};
+function makeSampleLocal(){return typeof makeSample==="function"?makeSample():mk(10,10,()=>{});}
+</script>
+<script src="../../revelador/src/sample.js"></script>
+<script>
+const opts=()=>({auto:$("auto").checked,keepLuma:$("luma").checked,skin:$("skin").checked});
+const $=id=>document.getElementById(id);
+const PW=640;
+let src=null,base=null,stats=null,cards=[];
+Object.keys(TESTS).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=k[0].toUpperCase()+k.slice(1);$("img").appendChild(o);});
+function setSource(c){
+  src=c;const cw=c.naturalWidth||c.width,ch=c.naturalHeight||c.height;const s=PW/cw,w=PW,h=Math.round(ch*s);
+  const t=document.createElement("canvas");t.width=w;t.height=h;const x=t.getContext("2d");x.drawImage(c,0,0,w,h);
+  base=x.getImageData(0,0,w,h);stats=computeStats(base);build();
+}
+function paramsFor(v){const P=neutral();addP(P,v.p,+$("int").value);
+  P.mono=Math.min(1,P.mono);P.vignette=Math.max(0,Math.min(1.2,P.vignette));P.grain=Math.max(0,P.grain);
+  P.whites=Math.max(0,Math.min(1,P.whites));P.blacks=Math.max(0,Math.min(.3,P.blacks));return P;}
+function metrics(d,ref){
+  let sl=0,clip=0,n=0,dr=0,dg=0,db=0;
+  for(let p=0;p<d.length;p+=4){const L=.2126*d[p]+.7152*d[p+1]+.0722*d[p+2];sl+=L;n++;if(d[p]>=254||d[p+1]>=254||d[p+2]>=254)clip++;
+    dr+=d[p]-ref[p];dg+=d[p+1]-ref[p+1];db+=d[p+2]-ref[p+2];}
+  return {luma:sl/n/255,clip:clip/n*100,dR:dr/n,dG:dg/n,dB:db/n};
+}
+function render(v){
+  const t0=performance.now();const P=paramsFor(v);
+  const lut=buildLUT(makeTransform(P,opts(),stats));const out=new ImageData(base.width,base.height);
+  applyRows(base.data,out.data,lut,base.width,base.height,P,0,base.height);
+  return {out,ms:performance.now()-t0,m:metrics(out.data,base.data)};
+}
+function build(){
+  $("grid").innerHTML="";cards=[];window.RESULTS=[];
+  const o0=base;const mk0=metrics(o0.data,o0.data);
+  VARIANTS.forEach(v=>{
+    const r=render(v);window.RESULTS.push({id:v.id,ms:r.ms,...r.m});
+    const el=document.createElement("div");el.className="card";el.dataset.id=v.id;
+    el.innerHTML=`<div class="cv"><canvas class="before"></canvas><canvas class="after"></canvas><div class="line"></div><span class="tag" style="left:8px">Original</span><span class="tag" style="right:8px">${v.nm}</span></div>
+      <div class="meta"><b>${v.nm}</b><small>${v.ds}</small>
+      <div class="st"><span>${r.ms.toFixed(0)} ms</span><span>luz ${(r.m.luma*100).toFixed(0)}% (orig ${(mk0.luma*100).toFixed(0)}%)</span><span>estourado ${r.m.clip.toFixed(2)}%</span></div>
+      <div class="pick"><button>Gostei desta</button></div></div>`;
+    const cb=el.querySelector(".before"),ca=el.querySelector(".after");
+    [cb,ca].forEach(c=>{c.width=base.width;c.height=base.height;});
+    cb.getContext("2d").putImageData(base,0,0);ca.getContext("2d").putImageData(r.out,0,0);
+    const cv=el.querySelector(".cv"),ln=el.querySelector(".line");
+    const set=f=>{f=Math.max(0,Math.min(1,f));ca.style.clipPath=`inset(0 0 0 ${f*100}%)`;ln.style.left=`calc(${f*100}% - 1px)`;};
+    set(.5);
+    const mv=e=>{const r=cv.getBoundingClientRect();set((e.clientX-r.left)/r.width);};
+    cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);mv(e);cv.onpointermove=mv;});
+    cv.addEventListener("pointerup",()=>cv.onpointermove=null);
+    el.querySelector(".pick button").onclick=()=>{document.querySelectorAll(".card").forEach(c=>c.classList.remove("sel"));el.classList.add("sel");window.PICKED=v.id;};
+    $("grid").appendChild(el);
+  });
+}
+$("img").onchange=()=>setSource(TESTS[$("img").value]());
+["int","auto","luma","skin"].forEach(id=>$(id).addEventListener("input",()=>{$("intv").textContent=Math.round(+$("int").value*100)+"%";build();}));
+$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>setSource(im);im.src=URL.createObjectURL(f);};
+setSource(TESTS.paisagem());
+</script>
+</body>
+</html>
